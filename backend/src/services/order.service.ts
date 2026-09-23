@@ -1,13 +1,11 @@
 import crypto from 'crypto';
-import { pool } from '../lib/db';
 import { AppError } from '../errors/AppError';
 import { generateProductMetadataRedisKey, generateProductStockRedisKey } from '../lib/redisKey';
 import { client as redis } from '../redis/client';
 import logger from '../lib/logger';
 import { getProductByIdRepository } from '../repositories/product.repository';
 import { LUA_SCRIPTS } from '../constants/luaScripts';
-
-
+import { orderQueue } from '../queues/order.queue';
 
 export interface ReservationResult {
     trackingId: string;
@@ -24,12 +22,12 @@ export async function createOrderService(
     const trackingId = crypto.randomUUID();
     const metaKey = generateProductMetadataRedisKey(productId);
 
-    // 1. Check Redis memory first
+    // 1. Check Redis cache for product metadata
     let productMeta = await redis.hGetAll(metaKey);
     let isFlashSale = false;
     let dbStock = 0;
 
-    // 2. Cache Miss: Product meta is not in Redis
+    // 2. Cache Miss: Fetch product from PostgreSQL and populate cache if flash sale
     if (!productMeta || Object.keys(productMeta).length === 0) {
         logger.warn(`Cache miss for product metadata: ${productId}. Fetching from PostgreSQL.`);
 
@@ -41,49 +39,71 @@ export async function createOrderService(
         isFlashSale = product.is_flash_sale;
         dbStock = product.official_stock;
 
-        // CRITICAL CHANGE: Only write to Redis if the admin has turned it into a Flash Sale item
         if (isFlashSale) {
-            logger.info(`Detected new dynamic Flash Sale product ${productId}. Saving to Redis gateway.`);
+            logger.info(`Detected active Flash Sale product ${productId}. Synchronizing Redis cache.`);
 
             await redis.hSet(metaKey, {
                 is_flash_sale: 'true',
-                official_stock: String(dbStock)
+                official_stock: String(dbStock),
             });
             await redis.expire(metaKey, 86400);
 
-            // Explicitly prepare the inventory token key as well
             const stockKey = generateProductStockRedisKey(productId);
             await redis.set(stockKey, String(dbStock));
         }
     } else {
-        // Cache Hit: Product was already confirmed as a flash sale item in Redis
+        // Cache Hit
         isFlashSale = productMeta.is_flash_sale === 'true';
         dbStock = parseInt(productMeta.official_stock, 10);
     }
 
-    // 3. High-Concurrency Path (Redis Lua Engine)
+    let remainingStock: number | undefined;
+
+    // 3. Concurrency Path Allocation
     if (isFlashSale) {
+        // High-Concurrency Path: Redis Lua Gatekeeper
         const stockKey = generateProductStockRedisKey(productId);
 
-        let result = (await redis.eval(LUA_SCRIPTS.decrementStock, {
+        const result = (await redis.eval(LUA_SCRIPTS.decrementStock, {
             keys: [stockKey],
-            arguments: [quantity.toString()]
+            arguments: [quantity.toString()],
         })) as number;
 
         if (result === -1) {
-            throw new AppError(422, 'Flash sale item is sold out or requested quantity exceeds stock.');
+            throw new AppError(422, 'Flash sale item is sold out or requested quantity exceeds available stock.');
         }
 
-        logger.info(`[Flash Stock Reserved] User ${userId} secured ${quantity} units via Redis.`);
-        return { trackingId, isFlashSale: true, remainingStock: result };
+        remainingStock = result;
+        logger.info(`[Flash Stock Reserved] User ${userId} secured ${quantity} units via Redis. Remaining: ${remainingStock}`);
+    } else {
+        // Standard Path: Verify availability before queue dispatch
+        if (dbStock < quantity) {
+            throw new AppError(422, `Insufficient stock for product. Available: ${dbStock}`);
+        }
+        logger.info(`[Standard Order Accepted] User ${userId} requested standard product ${productId}.`);
     }
 
-    // 4. Standard Path (Database Only fallback)
-    if (dbStock < quantity) {
-        throw new AppError(422, `Insufficient stock for product. Available: ${dbStock}`);
-    }
+    // 4. Decoupled Asynchronous Persistence via BullMQ (Always reached by both paths)
+    await orderQueue.add(
+        'process-order',
+        {
+            trackingId,
+            userId,
+            productId,
+            quantity,
+            totalAmount,
+            isFlashSale,
+        },
+        {
+            jobId: trackingId, // Idempotency key
+        }
+    );
 
-    logger.info(`[Standard Order Accepted] User ${userId} requested standard product ${productId}.`);
-    return { trackingId, isFlashSale: false };
+    logger.info(`[Queue Dispatched] Job ${trackingId} added to ${orderQueue.name}`);
+
+    return {
+        trackingId,
+        isFlashSale,
+        remainingStock,
+    };
 }
-

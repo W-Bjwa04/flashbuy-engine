@@ -3,3 +3,5 @@ export const STOCK_SUFFIX = ":stock";
 
 export const PRODUCT_METADATA_KEY_PREFIX = "product:";
 export const PRODUCT_METADATA_SUFFIX = ":meta";
+
+export const ORDER_QUEUE_NAME = 'order-processing-queue';
