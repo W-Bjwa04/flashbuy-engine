@@ -5,3 +5,5 @@ export const PRODUCT_METADATA_KEY_PREFIX = "product:";
 export const PRODUCT_METADATA_SUFFIX = ":meta";
 
 export const ORDER_QUEUE_NAME = 'order-processing-queue';
+
+export const ORDER_NOTIFICATIONS_CHANNEL = 'order_notifications';

@@ -56,13 +56,12 @@ export const orderWorker = new Worker<OrderJobPayload>(
                 [quantity, productId]
             );
 
-            // 3. Document master billing summary (IDEMPOTENT: Reuses trackingId as Primary Key if applicable)
+            // 3. Document master billing summary
             const orderRes = await dbClient.query(
-                `INSERT INTO orders (id, user_id, total_amount, status) 
-                 VALUES ($1, $2, $3, 'PROCESSING') 
-                 ON CONFLICT (id) DO UPDATE SET updated_at = NOW()
-                 RETURNING id`,
-                [trackingId, userId, totalAmount]
+                `INSERT INTO orders (user_id, total_amount, status) 
+                VALUES ($1, $2, 'PROCESSING') 
+                RETURNING id`,
+                [userId, totalAmount]
             );
 
             const orderId = orderRes.rows[0].id;
@@ -76,7 +75,7 @@ export const orderWorker = new Worker<OrderJobPayload>(
             );
 
             // 5. Run mock 3rd party processing gateway delay
-            await new Promise((resolve) => setTimeout(resolve, 500));
+            await new Promise((resolve) => setTimeout(resolve, 5000));
             const mockTxnRef = `txn_${trackingId.replace(/-/g, '').slice(0, 16)}`;
 
             // 6. FIX 2: Added ON CONFLICT DO NOTHING to prevent database retry crashes
@@ -96,11 +95,15 @@ export const orderWorker = new Worker<OrderJobPayload>(
             await dbClient.query('COMMIT');
             logger.info(`[Worker Success] Order ${orderId} completed for tracking ID ${trackingId}`);
 
+
+
             // 8. Publish Success Event to Redis Pub/Sub
             const successPayload = JSON.stringify({
                 trackingId, orderId, userId, productId, status: 'COMPLETED', timestamp: new Date().toISOString(),
             });
+
             await redis.publish('order_notifications', successPayload);
+            logger.info(`[Pub/Sub Publisher] Emitted COMPLETED event for user ${userId} to channel: order_notifications`);
 
             return { orderId, status: 'COMPLETED' };
 
@@ -120,6 +123,7 @@ export const orderWorker = new Worker<OrderJobPayload>(
                 trackingId, userId, productId, status: 'FAILED', reason: err.message || 'Order processing failed', timestamp: new Date().toISOString(),
             });
             await redis.publish('order_notifications', failurePayload);
+            logger.warn(`[Pub/Sub Publisher] Emitted FAILED event for trackingId ${trackingId} to channel: order_notifications`);
 
             throw err;
         } finally {
@@ -129,7 +133,7 @@ export const orderWorker = new Worker<OrderJobPayload>(
     },
     {
         connection: redisOptions,
-        concurrency: 5,
+        concurrency: 1,
     }
 );
 

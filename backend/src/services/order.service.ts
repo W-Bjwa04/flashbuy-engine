@@ -99,6 +99,19 @@ export async function createOrderService(
         }
     );
 
+    // Inside src/services/order.service.ts, right after orderQueue.add(...)
+    await redis.publish(
+        'order_notifications',
+        JSON.stringify({
+            trackingId,
+            orderId: null,
+            userId,
+            productId,
+            status: 'PENDING',
+            timestamp: new Date().toISOString(),
+        })
+    );
+
     logger.info(`[Queue Dispatched] Job ${trackingId} added to ${orderQueue.name}`);
 
     return {
