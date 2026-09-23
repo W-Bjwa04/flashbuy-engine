@@ -1,0 +1,12 @@
+-- Migration 008: Seed a sample flash sale product with UUID
+-- INSERT INTO products (title, description, price, official_stock, is_flash_sale, flash_start_at, flash_end_at)
+-- VALUES (
+--     'CyberPhone Pro Max - Flash Sale Edition',
+--     'High concurrency test item with limited stock.',
+--     499.99,
+--     100,
+--     TRUE,
+--     CURRENT_TIMESTAMP,
+--     CURRENT_TIMESTAMP + INTERVAL '24 hours'
+-- )
+-- ON CONFLICT DO NOTHING;

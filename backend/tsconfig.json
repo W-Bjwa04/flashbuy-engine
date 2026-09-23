@@ -1,0 +1,44 @@
+{
+    "compilerOptions": {
+        /* Language and Environment */
+        "target": "ES2022", /* Specify ECMAScript target version */
+        "lib": [
+            "ES2022",
+            "DOM",
+            "DOM.Iterable"
+        ], /* Specify library files to be included in the compilation */
+        /* Modules */
+        "module": "NodeNext", /* Specify module code generation */
+        "moduleResolution": "NodeNext", /* Determine how modules get resolved */
+        "resolveJsonModule": true, /* Allow importing .json files */
+        /* JavaScript Support */
+        "allowJs": true, /* Allow JavaScript files to be compiled */
+        "checkJs": false, /* Report errors in .js files */
+        /* Emit */
+        "outDir": "./dist", /* Redirect output structure to the directory */
+        "rootDir": "./src", /* Specify the root directory of input files */
+        "sourceMap": true, /* Create source map files for debugging */
+        "removeComments": true, /* Do not emit comments to output */
+        /* Interop Constraints */
+        "isolatedModules": true, /* Ensure each file can be safely transpiled without relying on other imports */
+        "allowSyntheticDefaultImports": true, /* Allow default imports from modules with no default export */
+        "esModuleInterop": true, /* Emit additional JavaScript to ease support for importing CommonJS modules */
+        /* Type Checking */
+        "strict": true, /* Enable all strict type-checking options */
+        "noImplicitAny": true, /* Raise error on expressions and declarations with an implied 'any' type */
+        "strictNullChecks": true, /* Enable strict null checks */
+        "noUnusedLocals": true, /* Report errors on unused locals */
+        "noUnusedParameters": true, /* Report errors on unused parameters */
+        "noImplicitReturns": true, /* Report error when not all code paths in function return a value */
+        "noFallthroughCasesInSwitch": true, /* Report errors for fallthrough cases in switch statement */
+        /* Completeness */
+        "skipLibCheck": true /* Skip type checking of declaration files (.d.ts) for faster builds */
+    },
+    "include": [
+        "src/**/*"
+    ], /* Specifying files to include */
+    "exclude": [
+        "node_modules",
+        "dist"
+    ] /* Specifying files to exclude */
+}
