@@ -64,3 +64,4 @@ export async function getProductByIdRepository(id: string): Promise<ProductRecor
     );
     return result.rows[0] || null;
 }
+

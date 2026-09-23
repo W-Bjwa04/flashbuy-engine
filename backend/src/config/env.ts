@@ -18,4 +18,5 @@ export const env = {
     DATABASE_URL: checkRequiredEnvVariables("DATABASE_URL"),
     ACCESS_TOKEN_SECRET: checkRequiredEnvVariables("ACCESS_TOKEN_SECRET"),
     ACCESS_TOKEN_EXPIRES_IN: checkRequiredEnvVariables("ACCESS_TOKEN_EXPIRES_IN"),
+    REDIS_URL: checkRequiredEnvVariables("REDIS_URL")
 } as const;

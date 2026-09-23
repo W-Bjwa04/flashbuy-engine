@@ -3,30 +3,40 @@ import { createApp } from "./app";
 import { env } from "./config/env";
 import logger from "./lib/logger";
 import { pool } from "./lib/db";
-
+import { connectRedis, disconnectRedis, client } from "./redis/client";
+import { syncFlashSaleInventoryToCache } from "./tasks/inventorySyncRedis";
 
 const app = createApp();
-
-// Wrap your Express instance into a Node HTTP Server
 const httpServer = createServer(app);
 
+/*
+
+ * Initializes infrastructure dependencies and boots up the network listener.
+
+*/
 
 async function bootstrap() {
-
-
-
     let runningServer: any;
 
     try {
+        // Ensure the relational database is accessible before initializing other tasks
+        await pool.query('SELECT NOW()');
+        logger.info('Successfully connected to the PostgreSQL database pool');
 
-        // Test the database connection 
-        pool.query('SELECT NOW()')
-            .then(() => logger.info('Successfully connected to the PostgreSQL database pool'))
-            .catch((err) => {
-                logger.error({ err }, 'Failed to connect to the PostgreSQL database pool');
-                process.exit(1); // Stop the server if the database isn't accessible
-            });
+        // Initialize the key-value database connection
+        await connectRedis();
 
+        if (!client.isOpen) {
+            logger.error('Failed to connect to Redis');
+            process.exit(1);
+        }
+
+        // Synchronize and warm up inventories in memory once storage engines are ready
+        await syncFlashSaleInventoryToCache().catch((error: any) => {
+            logger.error({ err: error, stack: error.stack }, `Failed to warm up Redis cache: ${error.message || error}`);
+        });
+
+        // Open the HTTP socket to start routing inbound network payloads
         runningServer = httpServer.listen(env.PORT, () => {
             logger.info(`Server running dynamically on http://localhost:${env.PORT}`);
         });
@@ -36,30 +46,41 @@ async function bootstrap() {
         process.exit(1);
     }
 
-    // Graceful Shutdown Handler Function
+    /*
+
+     * Intercepts process termination requests to close resources cleanly without data loss.
+
+    */
+
     const handleShutdown = async (signal: string) => {
         logger.info(`Received ${signal}. Starting graceful shutdown...`);
 
-        // Stop accepting new network payloads or streams
         if (runningServer) {
-            runningServer.close(() => {
-                logger.info("Integrated HTTP & WebSocket network servers closed.");
-            });
-        }
+            // Stop receiving incoming connection sockets while processing existing requests
+            runningServer.close(async () => {
+                logger.info("Integrated HTTP network server closed.");
 
-        try {
-            logger.info("Graceful shutdown complete. Exiting process.");
+                try {
+                    // Release socket allocations to prevent connection leakage on the cluster
+                    logger.info("Closing database and Redis connection clients...");
+                    await pool.end();
+                    await disconnectRedis();
+
+                    logger.info("Graceful shutdown complete. Exiting process cleanly.");
+                    process.exit(0);
+                } catch (error: any) {
+                    logger.error({ err: error, stack: error.stack }, `Error during clients disconnection: ${error.message || error}`);
+                    process.exit(1);
+                }
+            });
+        } else {
             process.exit(0);
-        } catch (error: any) {
-            logger.error({ err: error, stack: error.stack }, `Error during graceful shutdown: ${error.message || error}`);
-            process.exit(1);
         }
     };
 
-    // Register listeners for application termination signals
+    // Listen for termination signals issued by systems like Docker, Kubernetes, or the CLI
     process.on("SIGINT", () => handleShutdown("SIGINT"));
     process.on("SIGTERM", () => handleShutdown("SIGTERM"));
 }
-
 
 bootstrap();

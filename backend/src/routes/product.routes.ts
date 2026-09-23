@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { getProductByIdController, listProductsController } from "../controllers/product.controller";
 import { authenticate } from "../middlewares/auth.middleware";
+import { catchAsync } from "../middlewares/catchAsync";
 
 export const productRouter = Router()
 
@@ -11,6 +12,6 @@ productRouter.use(authenticate);
 
 
 
-productRouter.get("/", listProductsController);
+productRouter.get("/", catchAsync(listProductsController));
 
-productRouter.get("/:id", getProductByIdController)
+productRouter.get("/:id", catchAsync(getProductByIdController))

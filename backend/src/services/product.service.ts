@@ -1,4 +1,6 @@
 import { AppError } from "../errors/AppError";
+import { generateProductStockRedisKey } from "../lib/redisKey";
+import { sendResponse } from "../lib/response";
 import { countProductsRepository, getProductByIdRepository, listProductsRepository } from "../repositories/product.repository";
 import { ProductRecord } from "../types/product.types";
 
@@ -32,3 +34,4 @@ export async function getProductByIdService(id: string): Promise<ProductRecord |
     return product;
 
 }
+
