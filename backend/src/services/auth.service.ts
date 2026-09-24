@@ -60,7 +60,10 @@ export async function authLoginService(email: string, password: string) {
 
     const accessToken = await generateToken(existingUser.id, existingUser.email);
 
-    return accessToken;
+    return {
+        accessToken,
+        user: existingUser
+    };
 }
 
 
