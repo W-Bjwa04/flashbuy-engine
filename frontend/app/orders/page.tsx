@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useState, useRef, useTransition } from "react";
 import Link from "next/link";
 import { useSocket, OrderNotificationRecord } from "@/context/SocketContext";
 import { getMyOrdersAction } from "@/actions/order.action";
@@ -49,10 +49,16 @@ export default function OrdersPage() {
         loadCompletedOrders();
     }, []);
 
+    const refreshedTrackingIdsRef = useRef<Set<string>>(new Set());
+
     // Refresh completed orders whenever a WebSocket notification finishes as COMPLETED
     useEffect(() => {
-        const latest = notificationList[0];
-        if (latest && latest.status === "COMPLETED") {
+        const completedUnfetched = notificationList.find(
+            (n) => n.status === "COMPLETED" && !refreshedTrackingIdsRef.current.has(n.trackingId)
+        );
+
+        if (completedUnfetched) {
+            refreshedTrackingIdsRef.current.add(completedUnfetched.trackingId);
             startTransition(async () => {
                 const res = await getMyOrdersAction("COMPLETED");
                 if (res.success && res.data) {

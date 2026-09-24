@@ -20,10 +20,14 @@ interface UserOrderCardProps {
 export function UserOrderCard({ order }: UserOrderCardProps) {
     const [copied, setCopied] = useState(false);
 
-    const copyOrderId = () => {
-        navigator.clipboard.writeText(order.id);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
+    const copyOrderId = async () => {
+        try {
+            await navigator.clipboard.writeText(order.id);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        } catch {
+            // Leave copied state unchanged on failure
+        }
     };
 
     const formattedDate = new Date(order.created_at).toLocaleDateString("en-US", {

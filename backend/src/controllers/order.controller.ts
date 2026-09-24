@@ -44,7 +44,17 @@ export async function getUserOrdersController(req: Request, res: Response): Prom
         throw new AppError(401, "Unauthorized: Identity context missing from request profile.");
     }
 
-    const status = (req.query.status as string) || "COMPLETED";
+    const ALLOWED_STATUSES = ["PENDING", "PROCESSING", "COMPLETED", "FAILED"] as const;
+    const rawStatus = req.query.status;
+
+    let status = "COMPLETED";
+    if (rawStatus !== undefined) {
+        if (typeof rawStatus !== "string" || !ALLOWED_STATUSES.includes(rawStatus as any)) {
+            throw new AppError(400, "Invalid status parameter. Allowed values: PENDING, PROCESSING, COMPLETED, FAILED");
+        }
+        status = rawStatus;
+    }
+
     const orders = await getUserOrdersService(userId, status);
     sendResponse(res, 200, "User orders retrieved successfully", orders);
 }
