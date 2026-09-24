@@ -49,5 +49,11 @@ export async function authLoginController(req: Request, res: Response) {
 
 
     // send response
-    sendResponse(res, 200, "User logged in successfully", { accessToken: result });
+    sendResponse(res, 200, "User logged in successfully", {
+        accessToken: result.accessToken,
+        user: {
+            id: result.user.id,
+            email: result.user.email,
+        }
+    });
 }

@@ -10,7 +10,7 @@ export async function listProductsService(
     offset: number = 0
 ): Promise<{ products: ProductRecord[]; total: number }> {
 
-    // Clean and simple orchestration. No SQL blocks here.
+
     const [totalProducts, dataResult] = await Promise.all([
         countProductsRepository(flashSaleOnly),
         listProductsRepository(flashSaleOnly, limit, offset)
