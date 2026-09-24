@@ -1,8 +1,9 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: light; /* Force light rendering — prevent OS dark mode from inverting colors */
+  --background: #f8fafc; /* slate-50 */
+  --foreground: #0f172a; /* slate-900 */
 }
 
 @theme inline {
@@ -12,17 +13,16 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  /* Explicitly opt out of dark color scheme at the root */
+  color-scheme: light;
 }
 
 body {
-  background: #09090b; /* zinc-950 */
-  color: var(--foreground);
+  background: #f8fafc;
+  color: #0f172a;
   font-family: var(--font-geist-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
 /* Smooth entry for inline field error messages */

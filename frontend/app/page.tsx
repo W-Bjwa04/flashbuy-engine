@@ -26,11 +26,11 @@ export default async function HomePage() {
         if (products.length === 0) {
             return (
                 <main className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-                    <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-dashed border-zinc-800 py-24 text-center">
-                        <PackageSearch className="h-10 w-10 text-zinc-700" />
+                    <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-dashed border-slate-200 bg-white py-24 text-center">
+                        <PackageSearch className="h-10 w-10 text-slate-300" />
                         <div>
-                            <h2 className="text-base font-semibold text-zinc-300">No products yet</h2>
-                            <p className="mt-1 text-sm text-zinc-600">Check back soon — deals are added regularly.</p>
+                            <h2 className="text-base font-semibold text-slate-700">No products yet</h2>
+                            <p className="mt-1 text-sm text-slate-400">Check back soon — deals are added regularly.</p>
                         </div>
                     </div>
                 </main>
@@ -40,15 +40,15 @@ export default async function HomePage() {
         return (
             <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
                 {/* Page header */}
-                <div className="flex items-end justify-between gap-4">
+                <div className="flex items-end justify-between gap-4 border-b border-slate-200 pb-5">
                     <div>
-                        <h1 className="text-2xl font-black tracking-tight text-zinc-100">
+                        <h1 className="text-2xl font-black tracking-tight text-slate-900">
                             Marketplace
                         </h1>
-                        <p className="mt-1 text-sm text-zinc-500">
+                        <p className="mt-1 text-sm text-slate-500">
                             {products.length} product{products.length !== 1 ? "s" : ""}
                             {flashActive > 0 && (
-                                <> · <span className="text-amber-400 font-medium">{flashActive} live deal{flashActive !== 1 ? "s" : ""}</span></>
+                                <> · <span className="font-medium text-amber-600">{flashActive} live deal{flashActive !== 1 ? "s" : ""}</span></>
                             )}
                         </p>
                     </div>
@@ -66,11 +66,11 @@ export default async function HomePage() {
         console.error("[HomePage fetch error]:", error);
         return (
             <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-                <div className="flex items-start gap-3 rounded-xl border border-rose-500/15 bg-rose-500/5 p-5 text-sm text-rose-400">
-                    <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
+                <div className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-5 text-sm">
+                    <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-500" />
                     <div>
-                        <p className="font-semibold text-rose-300">Failed to load products</p>
-                        <p className="mt-0.5 text-zinc-500">Make sure the backend is running and you are signed in.</p>
+                        <p className="font-semibold text-red-700">Failed to load products</p>
+                        <p className="mt-0.5 text-slate-500">Make sure the backend is running and you are signed in.</p>
                     </div>
                 </div>
             </main>

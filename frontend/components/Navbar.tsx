@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { auth } from "@/auth";
-import { Zap, LogOut } from "lucide-react";
+import { Zap, LogOut, Bell } from "lucide-react";
 import { logoutAction } from "@/actions/auth.action";
 
 export async function Navbar() {
@@ -9,15 +9,15 @@ export async function Navbar() {
     const userInitial = userEmail?.charAt(0).toUpperCase() ?? "?";
 
     return (
-        <header className="sticky top-0 z-50 w-full border-b border-zinc-800/80 bg-zinc-950/90 backdrop-blur-sm">
+        <header className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white/95 backdrop-blur-sm">
             <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
 
                 {/* Brand */}
                 <Link href="/" className="group flex items-center gap-2">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 shadow-md shadow-indigo-600/30 transition group-hover:bg-indigo-500">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 shadow-sm transition group-hover:bg-indigo-700">
                         <Zap className="h-4 w-4 text-white" />
                     </div>
-                    <span className="text-base font-black tracking-tight text-white">FlashBuy</span>
+                    <span className="text-base font-black tracking-tight text-slate-900">FlashBuy</span>
                 </Link>
 
                 {/* Nav links — only for authenticated users */}
@@ -29,15 +29,28 @@ export async function Navbar() {
                 )}
 
                 {/* Right side */}
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
                     {session ? (
                         <>
+                            {/* Bell notification button */}
+                            <button
+                                title="Notifications"
+                                className="relative flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+                            >
+                                <Bell className="h-4 w-4" />
+                                {/* Notification indicator dot */}
+                                <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-indigo-600" />
+                            </button>
+
+                            {/* Divider */}
+                            <div className="h-5 w-px bg-slate-200" />
+
                             {/* Avatar + email */}
                             <div className="hidden sm:flex items-center gap-2">
-                                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-indigo-600/20 text-xs font-bold text-indigo-400 ring-1 ring-indigo-500/30">
+                                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-indigo-100 text-xs font-bold text-indigo-700 ring-1 ring-indigo-200">
                                     {userInitial}
                                 </div>
-                                <span className="max-w-35 truncate text-xs text-zinc-400">
+                                <span className="max-w-35 truncate text-xs text-slate-600 font-medium">
                                     {userEmail}
                                 </span>
                             </div>
@@ -47,7 +60,7 @@ export async function Navbar() {
                                 <button
                                     type="submit"
                                     title="Sign out"
-                                    className="flex h-8 w-8 items-center justify-center rounded-lg text-zinc-500 transition hover:bg-zinc-800 hover:text-rose-400"
+                                    className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-500"
                                 >
                                     <LogOut className="h-4 w-4" />
                                 </button>
@@ -57,13 +70,13 @@ export async function Navbar() {
                         <div className="flex items-center gap-2">
                             <Link
                                 href="/login"
-                                className="rounded-lg px-3 py-1.5 text-sm font-medium text-zinc-400 transition hover:text-zinc-200"
+                                className="rounded-lg px-3 py-1.5 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
                             >
                                 Sign in
                             </Link>
                             <Link
                                 href="/register"
-                                className="rounded-lg bg-indigo-600 px-3 py-1.5 text-sm font-semibold text-white shadow-md shadow-indigo-600/20 transition hover:bg-indigo-500"
+                                className="rounded-lg bg-indigo-600 px-3 py-1.5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700"
                             >
                                 Get started
                             </Link>
@@ -79,7 +92,7 @@ function NavLink({ href, children }: { href: string; children: React.ReactNode }
     return (
         <Link
             href={href}
-            className="rounded-lg px-3 py-1.5 text-sm font-medium text-zinc-400 transition hover:bg-zinc-900 hover:text-zinc-100"
+            className="rounded-lg px-3 py-1.5 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
         >
             {children}
         </Link>
