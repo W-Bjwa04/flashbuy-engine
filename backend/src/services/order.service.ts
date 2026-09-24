@@ -4,6 +4,7 @@ import { generateProductMetadataRedisKey, generateProductStockRedisKey } from '.
 import { client as redis } from '../redis/client';
 import logger from '../lib/logger';
 import { getProductByIdRepository } from '../repositories/product.repository';
+import { getUserOrdersRepository } from '../repositories/order.repository';
 import { LUA_SCRIPTS } from '../constants/luaScripts';
 import { orderQueue } from '../queues/order.queue';
 
@@ -120,3 +121,7 @@ export async function createOrderService(
         remainingStock,
     };
 }
+
+export async function getUserOrdersService(userId: string, status: string = "COMPLETED") {
+    return getUserOrdersRepository(userId, status);
+}
