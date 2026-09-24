@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { auth } from "@/auth";
-import { Zap, LogOut, Bell } from "lucide-react";
+import { Zap, LogOut } from "lucide-react";
 import { logoutAction } from "@/actions/auth.action";
+import { NavBell } from "./NavBell";
 
 export async function Navbar() {
     const session = await auth();
@@ -20,10 +21,11 @@ export async function Navbar() {
                     <span className="text-base font-black tracking-tight text-slate-900">FlashBuy</span>
                 </Link>
 
-                {/* Nav links — only for authenticated users */}
+                {/* Nav links */}
                 {session && (
                     <nav className="hidden md:flex items-center gap-0.5">
                         <NavLink href="/">Marketplace</NavLink>
+                        <NavLink href="/flash-sales">Flash Sales</NavLink>
                         <NavLink href="/orders">Orders</NavLink>
                     </nav>
                 )}
@@ -32,15 +34,8 @@ export async function Navbar() {
                 <div className="flex items-center gap-2">
                     {session ? (
                         <>
-                            {/* Bell notification button */}
-                            <button
-                                title="Notifications"
-                                className="relative flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
-                            >
-                                <Bell className="h-4 w-4" />
-                                {/* Notification indicator dot */}
-                                <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-indigo-600" />
-                            </button>
+                            {/* Client-side socket bell — must be a separate Client Component */}
+                            <NavBell />
 
                             {/* Divider */}
                             <div className="h-5 w-px bg-slate-200" />

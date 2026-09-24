@@ -1,14 +1,14 @@
-import { Request, Response, NextFunction } from "express";
+import { Request, Response } from "express";
 import { createOrderSchema } from "../validations/order.validation";
 import { AppError } from "../errors/AppError";
 import { sendResponse } from "../lib/response";
-import { createOrderService } from "../services/order.service";
+import { createOrderService, getUserOrdersService } from "../services/order.service";
 
 
 /**
  * Handles incoming order creation requests and validates memory parameters.
  */
-export async function createOrderController(req: Request, res: Response, next: NextFunction): Promise<void> {
+export async function createOrderController(req: Request, res: Response): Promise<void> {
     // Validate request structure via Zod schema
     const validate = createOrderSchema.safeParse(req);
 
@@ -34,3 +34,18 @@ export async function createOrderController(req: Request, res: Response, next: N
     // Issue 202 Accepted response status for background asynchronous processing jobs
     sendResponse(res, 202, "Stock secured. Order accepted for background processing.", result);
 }
+
+/**
+ * Handles fetching completed orders for the authenticated user.
+ */
+export async function getUserOrdersController(req: Request, res: Response): Promise<void> {
+    const userId = (req as any).user?.userId;
+    if (!userId) {
+        throw new AppError(401, "Unauthorized: Identity context missing from request profile.");
+    }
+
+    const status = (req.query.status as string) || "COMPLETED";
+    const orders = await getUserOrdersService(userId, status);
+    sendResponse(res, 200, "User orders retrieved successfully", orders);
+}
+
