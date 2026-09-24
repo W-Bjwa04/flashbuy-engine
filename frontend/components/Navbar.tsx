@@ -61,18 +61,18 @@ export async function Navbar() {
                             </span>
                         </div>
 
-                        {/* Logout Form & Button using Next.js Server Actions */}
-                        <form
-                            action={logoutAction}
-                        >
-                            <button
-                                type="submit"
-                                className="flex h-9 w-9 items-center justify-center rounded-xl border border-rose-950/30 bg-rose-950/10 text-rose-400 hover:bg-rose-600 hover:text-white transition outline-none"
-                                title="Sign Out"
-                            >
-                                <LogOut className="h-4 w-4" />
-                            </button>
-                        </form>
+                        {/* Logout Form & Button — only render for authenticated sessions */}
+                        {session && (
+                            <form action={logoutAction}>
+                                <button
+                                    type="submit"
+                                    className="flex h-9 w-9 items-center justify-center rounded-xl border border-rose-950/30 bg-rose-950/10 text-rose-400 hover:bg-rose-600 hover:text-white transition outline-none"
+                                    title="Sign Out"
+                                >
+                                    <LogOut className="h-4 w-4" />
+                                </button>
+                            </form>
+                        )}
 
                     </div>
 

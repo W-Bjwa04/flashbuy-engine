@@ -1,8 +1,38 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Prerequisites
+
+Before running the frontend, the following services must be running:
+
+1. **PostgreSQL** — the Express API requires a running Postgres database. Apply migrations from the `backend/` directory:
+   ```bash
+   cd backend
+   npm run migrate
+   ```
+
+2. **Redis** — used for rate-limiting and caching in the Express API:
+   ```bash
+   # macOS/Linux (with redis installed)
+   redis-server
+   # or via Docker
+   docker run -p 6379:6379 redis:alpine
+   ```
+
+3. **Express API** — the backend server must be running before the frontend can log in or fetch products:
+   ```bash
+   cd backend
+   npm run dev   # starts on http://localhost:5000 by default
+   ```
+
+4. **Frontend environment** — create `frontend/.env.local` and set the following variables:
+   ```env
+   NEXT_PUBLIC_API_URL=http://localhost:5000
+   AUTH_SECRET=<generate with: openssl rand -base64 32>
+   ```
+
 ## Getting Started
 
-First, run the development server:
+Once all prerequisites are in place, run the Next.js development server:
 
 ```bash
 npm run dev

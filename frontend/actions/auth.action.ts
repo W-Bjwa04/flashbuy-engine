@@ -24,8 +24,10 @@ export async function loginAction(prevState: any, formData: FormData) {
         return { success: true };
     } catch (error) {
         if (error instanceof AuthError) {
-            // Catch NextAuth credential processing mismatches
-            return { error: "Invalid email or password. Please try again" };
+            if (error.type === "CredentialsSignin") {
+                return { error: "Invalid email or password. Please try again" };
+            }
+            return { error: "Unable to sign in right now. Please try again later." };
         }
         // Next.js redirect system internally utilizes thrown exceptions. 
         // MUST rethrow the error here so Next.js can process the dashboard redirection.

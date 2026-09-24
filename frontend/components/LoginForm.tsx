@@ -47,10 +47,11 @@ export function LoginForm() {
 
             <form action={formAction} className="mt-6 space-y-4">
                 <div>
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400">
+                    <label htmlFor="login-email" className="block text-xs font-semibold uppercase tracking-wider text-zinc-400">
                         Email Address
                     </label>
                     <input
+                        id="login-email"
                         type="email"
                         name="email" // FormData looks for input names, not state values!
                         required
@@ -60,10 +61,11 @@ export function LoginForm() {
                 </div>
 
                 <div>
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400">
+                    <label htmlFor="login-password" className="block text-xs font-semibold uppercase tracking-wider text-zinc-400">
                         Password
                     </label>
                     <input
+                        id="login-password"
                         type="password"
                         name="password" // FormData looks for input names!
                         required

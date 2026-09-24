@@ -16,25 +16,48 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                     return null;
                 }
 
+                // Bounded 10-second timeout: if the backend stalls, fail fast
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10_000);
+
+                let res: Response;
                 try {
-                    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`, {
+                    res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`, {
                         method: "POST",
                         headers: {
                             "Content-Type": "application/json",
                         },
                         body: JSON.stringify({
                             email: credentials.email,
-                            password: credentials.password
-                        })
+                            password: credentials.password,
+                        }),
+                        signal: controller.signal,
                     });
+                } catch (fetchError: any) {
+                    if (fetchError?.name === "AbortError") {
+                        throw new Error("Authentication service timed out. Please try again.");
+                    }
+                    throw fetchError;
+                } finally {
+                    clearTimeout(timeoutId);
+                }
 
+                try {
                     const data = await res.json();
 
-                    if (!res.ok || !data.success) {
+                    if (!res.ok) {
+                        // 400/404 = bad credentials; anything else = backend failure
+                        if (res.status === 400 || res.status === 404) {
+                            return null;
+                        }
+                        throw new Error("Authentication service unavailable");
+                    }
+
+                    if (!data.success) {
                         return null;
                     }
 
-                    // Return user object with the Express JWT attached  
+                    // Return user object with the Express JWT attached
                     return {
                         id: String(data.data.user.id),
                         email: data.data.user.email,
@@ -42,7 +65,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                     };
                 } catch (error) {
                     console.error("[Auth.js Authorize Error]: ", error);
-                    return null;
+                    throw error;
                 }
             }
         })

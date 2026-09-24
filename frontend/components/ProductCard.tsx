@@ -1,9 +1,10 @@
+"use client";
+
 import { Zap, ShoppingBag, EyeOff } from "lucide-react";
 import { Product } from "@/types/product";
+import { useEffect, useState } from "react";
 
-export function ProductCard({ product }: { product: Product }) {
-    const isOutOfStock = product.official_stock === 0;
-
+function getFlashStatus(product: Product) {
     const now = new Date();
 
     const isFlashActive = !!(
@@ -20,6 +21,41 @@ export function ProductCard({ product }: { product: Product }) {
         product.flash_end_at &&
         now > new Date(product.flash_end_at)
     );
+
+    return { isFlashActive, isFlashExpired };
+}
+
+export function ProductCard({ product }: { product: Product }) {
+    const isOutOfStock = product.official_stock === 0;
+
+    // Initialise status from the current time (matches SSR render to avoid hydration mismatch)
+    const [{ isFlashActive, isFlashExpired }, setFlashStatus] = useState(
+        () => getFlashStatus(product)
+    );
+
+    useEffect(() => {
+        // Re-evaluate immediately in case client time differs slightly
+        setFlashStatus(getFlashStatus(product));
+
+        if (!product.is_flash_sale) return;
+
+        const now = new Date();
+        const timers: ReturnType<typeof setTimeout>[] = [];
+
+        // Schedule a status refresh at each flash sale boundary
+        const boundaries = [product.flash_start_at, product.flash_end_at];
+        for (const boundary of boundaries) {
+            if (!boundary) continue;
+            const msUntil = new Date(boundary).getTime() - now.getTime();
+            if (msUntil > 0) {
+                timers.push(
+                    setTimeout(() => setFlashStatus(getFlashStatus(product)), msUntil + 100)
+                );
+            }
+        }
+
+        return () => timers.forEach(clearTimeout);
+    }, [product]);
 
     return (
         <div className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900 p-6 transition-all duration-300 hover:-translate-y-1 hover:border-zinc-700 hover:shadow-xl hover:shadow-zinc-950/50">
@@ -63,15 +99,22 @@ export function ProductCard({ product }: { product: Product }) {
             <div className="mt-6 flex items-center justify-between gap-4 pt-4 border-t border-zinc-800/60">
                 <div className="flex flex-col">
                     <span className="text-xs text-zinc-500 uppercase tracking-wider font-semibold">Price</span>
-                    <span className="text-2xl font-black text-zinc-100">\${parseFloat(product.price).toFixed(2)}</span>
+                    {/* Fixed: removed the erroneous backslash before the dollar sign */}
+                    <span className="text-2xl font-black text-zinc-100">${parseFloat(product.price).toFixed(2)}</span>
                 </div>
 
-                <button
-                    disabled={isOutOfStock || isFlashExpired}
-                    className={`flex h-11 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-200 outline-none w-1/2
-            ${isOutOfStock || isFlashExpired
+                {/*
+                 * TODO: connect to a claim/purchase flow.
+                 * Until that flow exists the button is non-interactive for
+                 * in-stock products to avoid a dead enabled control.
+                 */}
+                <div
+                    aria-disabled={isOutOfStock || isFlashExpired || true}
+                    title={isOutOfStock ? "Out of stock" : isFlashExpired ? "Sale has ended" : "Coming soon"}
+                    className={`flex h-11 w-1/2 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold select-none
+                        ${isOutOfStock || isFlashExpired
                             ? "bg-zinc-800 text-zinc-500 border border-zinc-700 cursor-not-allowed"
-                            : "bg-indigo-600 text-white shadow-lg shadow-indigo-600/20 hover:bg-indigo-500 hover:shadow-indigo-600/30 active:scale-95"
+                            : "bg-indigo-600/50 text-indigo-300 border border-indigo-600/30 cursor-not-allowed"
                         }`}
                 >
                     {isOutOfStock ? (
@@ -85,7 +128,7 @@ export function ProductCard({ product }: { product: Product }) {
                             <span>Claim Deal</span>
                         </>
                     )}
-                </button>
+                </div>
             </div>
 
         </div>

@@ -36,7 +36,7 @@ export function RegisterForm() {
 
                 {/* Full Name Input */}
                 <div>
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400">
+                    <label htmlFor="register-name" className="block text-xs font-semibold uppercase tracking-wider text-zinc-400">
                         Full Name
                     </label>
                     <div className="relative mt-1.5">
@@ -44,6 +44,7 @@ export function RegisterForm() {
                             <User className="h-4 w-4" />
                         </span>
                         <input
+                            id="register-name"
                             type="text"
                             name="name" // formData.get("name") in  Server Action
                             required
@@ -55,7 +56,7 @@ export function RegisterForm() {
 
                 {/* Email Address Input */}
                 <div>
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400">
+                    <label htmlFor="register-email" className="block text-xs font-semibold uppercase tracking-wider text-zinc-400">
                         Email Address
                     </label>
                     <div className="relative mt-1.5">
@@ -63,6 +64,7 @@ export function RegisterForm() {
                             <Mail className="h-4 w-4" />
                         </span>
                         <input
+                            id="register-email"
                             type="email"
                             name="email" // Matches formData.get("email") in Server Action
                             required
@@ -74,7 +76,7 @@ export function RegisterForm() {
 
                 {/* Password Input */}
                 <div>
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400">
+                    <label htmlFor="register-password" className="block text-xs font-semibold uppercase tracking-wider text-zinc-400">
                         Password
                     </label>
                     <div className="relative mt-1.5">
@@ -82,6 +84,7 @@ export function RegisterForm() {
                             <Lock className="h-4 w-4" />
                         </span>
                         <input
+                            id="register-password"
                             type="password"
                             name="password" // Matches formData.get("password") in Server Action
                             required

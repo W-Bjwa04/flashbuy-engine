@@ -5,7 +5,8 @@ import { NextResponse } from "next/server";
 const { auth } = NextAuth(authConfig);
 
 export default auth((req) => {
-    const isLoggedIn = !!req.auth?.accessToken;
+    // session.accessToken is no longer exposed to clients; use session.user as the auth signal
+    const isLoggedIn = !!req.auth?.user;
     const { nextUrl } = req;
 
     const isAuthRoute = nextUrl.pathname === "/login" || nextUrl.pathname === "/register";
