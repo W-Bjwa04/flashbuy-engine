@@ -1,84 +1,87 @@
 import Link from "next/link";
-import { auth, signOut } from "@/auth";
-import { Zap, Bell, LogOut, User } from "lucide-react";
+import { auth } from "@/auth";
+import { Zap, LogOut } from "lucide-react";
 import { logoutAction } from "@/actions/auth.action";
 
 export async function Navbar() {
     const session = await auth();
-
-    const userEmail = session?.user?.email || "Guest User";
-
-    // Extract first letter of email for a clean avatar fallback
-    const userInitial = userEmail.charAt(0).toUpperCase();
+    const userEmail = session?.user?.email;
+    const userInitial = userEmail?.charAt(0).toUpperCase() ?? "?";
 
     return (
-        <nav className="sticky top-0 z-50 w-full border-b border-zinc-800 bg-zinc-950/80 backdrop-blur-md">
-            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                <div className="flex h-16 items-center justify-between">
+        <header className="sticky top-0 z-50 w-full border-b border-zinc-800/80 bg-zinc-950/90 backdrop-blur-sm">
+            <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
 
-                    {/* Left: Branding & Navigation */}
-                    <div className="flex items-center gap-8">
-                        <Link href="/" className="flex items-center gap-2 group">
-                            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-lg shadow-indigo-600/20 group-hover:scale-105 transition">
-                                <Zap className="h-5 w-5" />
-                            </div>
-                            <span className="text-xl font-black tracking-tight text-white">FlashBuy</span>
-                        </Link>
-
-                        <div className="hidden md:flex items-center gap-1">
-                            <Link href="/dashboard" className="px-3 py-2 text-sm font-medium text-zinc-200 hover:text-indigo-400 rounded-lg hover:bg-zinc-900 transition">
-                                Dashboard
-                            </Link>
-                            <Link href="/sales" className="px-3 py-2 text-sm font-medium text-zinc-400 hover:text-indigo-400 rounded-lg hover:bg-zinc-900 transition">
-                                Flash Sales
-                            </Link>
-                            <Link href="/orders" className="px-3 py-2 text-sm font-medium text-zinc-400 hover:text-indigo-400 rounded-lg hover:bg-zinc-900 transition">
-                                Orders
-                            </Link>
-                        </div>
+                {/* Brand */}
+                <Link href="/" className="group flex items-center gap-2">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 shadow-md shadow-indigo-600/30 transition group-hover:bg-indigo-500">
+                        <Zap className="h-4 w-4 text-white" />
                     </div>
+                    <span className="text-base font-black tracking-tight text-white">FlashBuy</span>
+                </Link>
 
-                    {/* Right: Actions (Notification, Profile & Logout) */}
-                    <div className="flex items-center gap-4">
+                {/* Nav links — only for authenticated users */}
+                {session && (
+                    <nav className="hidden md:flex items-center gap-0.5">
+                        <NavLink href="/">Marketplace</NavLink>
+                        <NavLink href="/orders">Orders</NavLink>
+                    </nav>
+                )}
 
-                        {/* Bell Icon Button with Notification Dot */}
-                        <button className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100 transition outline-none">
-                            <Bell className="h-4 w-4" />
-                            {/* Ping notification marker */}
-                            <span className="absolute top-1.5 right-1.5 flex h-2 w-2">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
-                            </span>
-                        </button>
-
-                        {/* Simple User Profile Pill */}
-                        <div className="hidden sm:flex items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900 pl-2 pr-3 py-1 text-sm font-medium text-zinc-300">
-                            <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-indigo-600/20 text-indigo-400 font-bold text-xs">
-                                {userInitial}
+                {/* Right side */}
+                <div className="flex items-center gap-3">
+                    {session ? (
+                        <>
+                            {/* Avatar + email */}
+                            <div className="hidden sm:flex items-center gap-2">
+                                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-indigo-600/20 text-xs font-bold text-indigo-400 ring-1 ring-indigo-500/30">
+                                    {userInitial}
+                                </div>
+                                <span className="max-w-35 truncate text-xs text-zinc-400">
+                                    {userEmail}
+                                </span>
                             </div>
-                            <span className="max-w-[120px] truncate text-xs text-zinc-400">
-                                {userEmail}
-                            </span>
-                        </div>
 
-                        {/* Logout Form & Button — only render for authenticated sessions */}
-                        {session && (
+                            {/* Sign out */}
                             <form action={logoutAction}>
                                 <button
                                     type="submit"
-                                    className="flex h-9 w-9 items-center justify-center rounded-xl border border-rose-950/30 bg-rose-950/10 text-rose-400 hover:bg-rose-600 hover:text-white transition outline-none"
-                                    title="Sign Out"
+                                    title="Sign out"
+                                    className="flex h-8 w-8 items-center justify-center rounded-lg text-zinc-500 transition hover:bg-zinc-800 hover:text-rose-400"
                                 >
                                     <LogOut className="h-4 w-4" />
                                 </button>
                             </form>
-                        )}
-
-                    </div>
-
+                        </>
+                    ) : (
+                        <div className="flex items-center gap-2">
+                            <Link
+                                href="/login"
+                                className="rounded-lg px-3 py-1.5 text-sm font-medium text-zinc-400 transition hover:text-zinc-200"
+                            >
+                                Sign in
+                            </Link>
+                            <Link
+                                href="/register"
+                                className="rounded-lg bg-indigo-600 px-3 py-1.5 text-sm font-semibold text-white shadow-md shadow-indigo-600/20 transition hover:bg-indigo-500"
+                            >
+                                Get started
+                            </Link>
+                        </div>
+                    )}
                 </div>
             </div>
-        </nav>
+        </header>
     );
 }
 
+function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
+    return (
+        <Link
+            href={href}
+            className="rounded-lg px-3 py-1.5 text-sm font-medium text-zinc-400 transition hover:bg-zinc-900 hover:text-zinc-100"
+        >
+            {children}
+        </Link>
+    );
+}

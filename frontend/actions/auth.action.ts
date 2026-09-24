@@ -62,7 +62,30 @@ export async function registerAction(prevState: any, formData: FormData) {
         const data = await res.json();
 
         if (!res.ok || !data.success) {
-            return { error: data.message || "Registration failed. Please try again." };
+            const rawMessage: string = data.message || "Registration failed. Please try again.";
+
+            // Parse backend Zod validation errors:
+            // Format: "Validation error:body.field: message, body.field2: message2"
+            const validationPrefix = "Validation error:";
+            if (rawMessage.startsWith(validationPrefix)) {
+                const fieldErrors: Record<string, string> = {};
+                const parts = rawMessage.slice(validationPrefix.length).split(", ");
+                for (const part of parts) {
+                    // part = "body.password: Password must be at least 6 characters"
+                    const colonIdx = part.indexOf(": ");
+                    if (colonIdx !== -1) {
+                        const rawField = part.slice(0, colonIdx).trim(); // "body.password"
+                        const message = part.slice(colonIdx + 2).trim();
+                        // Strip "body." prefix to get the bare field name
+                        const field = rawField.replace(/^body\./, "");
+                        fieldErrors[field] = message;
+                    }
+                }
+                const firstError = Object.values(fieldErrors)[0] ?? rawMessage;
+                return { error: firstError, fieldErrors };
+            }
+
+            return { error: rawMessage };
         }
 
     } catch (error) {

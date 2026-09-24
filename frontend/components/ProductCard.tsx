@@ -6,7 +6,6 @@ import { useEffect, useState } from "react";
 
 function getFlashStatus(product: Product) {
     const now = new Date();
-
     const isFlashActive = !!(
         product.is_flash_sale &&
         product.flash_start_at &&
@@ -14,123 +13,107 @@ function getFlashStatus(product: Product) {
         now >= new Date(product.flash_start_at) &&
         now <= new Date(product.flash_end_at)
     );
-
     const isFlashExpired = !!(
         product.is_flash_sale &&
         !isFlashActive &&
         product.flash_end_at &&
         now > new Date(product.flash_end_at)
     );
-
     return { isFlashActive, isFlashExpired };
 }
 
 export function ProductCard({ product }: { product: Product }) {
     const isOutOfStock = product.official_stock === 0;
+    const isLowStock = !isOutOfStock && product.official_stock < 30;
 
-    // Initialise status from the current time (matches SSR render to avoid hydration mismatch)
     const [{ isFlashActive, isFlashExpired }, setFlashStatus] = useState(
         () => getFlashStatus(product)
     );
 
     useEffect(() => {
-        // Re-evaluate immediately in case client time differs slightly
         setFlashStatus(getFlashStatus(product));
-
         if (!product.is_flash_sale) return;
-
         const now = new Date();
         const timers: ReturnType<typeof setTimeout>[] = [];
-
-        // Schedule a status refresh at each flash sale boundary
-        const boundaries = [product.flash_start_at, product.flash_end_at];
-        for (const boundary of boundaries) {
+        for (const boundary of [product.flash_start_at, product.flash_end_at]) {
             if (!boundary) continue;
-            const msUntil = new Date(boundary).getTime() - now.getTime();
-            if (msUntil > 0) {
-                timers.push(
-                    setTimeout(() => setFlashStatus(getFlashStatus(product)), msUntil + 100)
-                );
-            }
+            const ms = new Date(boundary).getTime() - now.getTime();
+            if (ms > 0) timers.push(setTimeout(() => setFlashStatus(getFlashStatus(product)), ms + 100));
         }
-
         return () => timers.forEach(clearTimeout);
     }, [product]);
 
-    return (
-        <div className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900 p-6 transition-all duration-300 hover:-translate-y-1 hover:border-zinc-700 hover:shadow-xl hover:shadow-zinc-950/50">
+    const isDisabled = isOutOfStock || isFlashExpired;
 
-            {/* Absolute Header Status Badges */}
-            <div className="absolute top-4 right-4 flex flex-col items-end gap-1.5 z-10">
+    return (
+        <article className="group relative flex flex-col rounded-2xl border border-zinc-800 bg-zinc-900 p-5 transition-all duration-200 hover:border-zinc-700 hover:shadow-lg hover:shadow-zinc-950/60">
+
+            {/* Status badge — top right */}
+            <div className="absolute top-4 right-4">
                 {isOutOfStock ? (
-                    <span className="rounded-lg bg-zinc-950 px-2.5 py-1 text-2xl font-bold uppercase tracking-wider text-zinc-500 border border-zinc-800">
-                        Sold Out
+                    <span className="rounded-md bg-zinc-800 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+                        Sold out
                     </span>
                 ) : isFlashActive ? (
-                    <span className="flex items-center gap-1 rounded-lg bg-amber-500/10 px-2.5 py-1 text-2xl font-bold uppercase tracking-wider text-amber-400 border border-amber-500/20 shadow-lg shadow-amber-500/5 animate-pulse">
-                        <Zap className="h-3 w-3 fill-amber-400" /> Live Deal
+                    <span className="flex items-center gap-1 rounded-md bg-amber-500/10 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider text-amber-400 ring-1 ring-amber-500/20">
+                        <Zap className="h-2.5 w-2.5 fill-current" />
+                        Live
                     </span>
                 ) : isFlashExpired ? (
-                    <span className="rounded-lg bg-zinc-800 px-2.5 py-1 text-2xl font-bold uppercase tracking-wider text-zinc-400 border border-zinc-700">
+                    <span className="rounded-md bg-zinc-800 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-zinc-600">
                         Ended
                     </span>
                 ) : null}
             </div>
 
-            {/* Product Content Details Container */}
-            <div className="space-y-3">
-                <div className="space-y-1.5">
-                    <h3 className="pr-20 text-lg font-bold tracking-tight text-zinc-100 transition group-hover:text-white">
-                        {product.title}
-                    </h3>
-                    <p className="line-clamp-2 text-sm leading-relaxed text-zinc-400">
-                        {product.description}
-                    </p>
-                </div>
-
-                {/* Live Stock Tracking Status pill */}
-                <div className="inline-flex items-center gap-1.5 rounded-lg bg-zinc-950 px-2.5 py-1 text-xs text-zinc-400 border border-zinc-800/60">
-                    <span className={`h-1.5 w-1.5 rounded-full ${isOutOfStock ? 'bg-rose-500' : product.official_stock < 30 ? 'bg-amber-500' : 'bg-emerald-500'}`} />
-                    <span>{isOutOfStock ? "No Stock Available" : `${product.official_stock} Items Remaining`}</span>
-                </div>
+            {/* Content */}
+            <div className="flex-1 space-y-2 pr-16">
+                <h3 className="text-sm font-bold text-zinc-100 group-hover:text-white transition leading-snug">
+                    {product.title}
+                </h3>
+                <p className="line-clamp-2 text-xs leading-relaxed text-zinc-500">
+                    {product.description}
+                </p>
             </div>
 
-            {/* Pricing and Action Button Footer Block */}
-            <div className="mt-6 flex items-center justify-between gap-4 pt-4 border-t border-zinc-800/60">
-                <div className="flex flex-col">
-                    <span className="text-xs text-zinc-500 uppercase tracking-wider font-semibold">Price</span>
-                    {/* Fixed: removed the erroneous backslash before the dollar sign */}
-                    <span className="text-2xl font-black text-zinc-100">${parseFloat(product.price).toFixed(2)}</span>
+            {/* Footer */}
+            <div className="mt-4 flex items-center justify-between gap-3 border-t border-zinc-800/60 pt-4">
+                {/* Price + stock */}
+                <div>
+                    <span className="text-xl font-black text-zinc-100">
+                        ${parseFloat(product.price).toFixed(2)}
+                    </span>
+                    <div className="mt-0.5 flex items-center gap-1.5">
+                        <span className={`h-1.5 w-1.5 rounded-full ${isOutOfStock ? "bg-rose-500" : isLowStock ? "bg-amber-500" : "bg-emerald-500"}`} />
+                        <span className="text-[11px] text-zinc-600">
+                            {isOutOfStock ? "Out of stock" : `${product.official_stock} left`}
+                        </span>
+                    </div>
                 </div>
 
-                {/*
-                 * TODO: connect to a claim/purchase flow.
-                 * Until that flow exists the button is non-interactive for
-                 * in-stock products to avoid a dead enabled control.
-                 */}
+                {/* Action */}
                 <div
-                    aria-disabled={isOutOfStock || isFlashExpired || true}
+                    aria-disabled="true"
                     title={isOutOfStock ? "Out of stock" : isFlashExpired ? "Sale has ended" : "Coming soon"}
-                    className={`flex h-11 w-1/2 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold select-none
-                        ${isOutOfStock || isFlashExpired
-                            ? "bg-zinc-800 text-zinc-500 border border-zinc-700 cursor-not-allowed"
-                            : "bg-indigo-600/50 text-indigo-300 border border-indigo-600/30 cursor-not-allowed"
-                        }`}
+                    className={`flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-semibold select-none transition ${
+                        isDisabled
+                            ? "bg-zinc-800 text-zinc-600 cursor-not-allowed"
+                            : "bg-indigo-600/20 text-indigo-400 ring-1 ring-indigo-500/20 cursor-not-allowed"
+                    }`}
                 >
                     {isOutOfStock ? (
                         <>
-                            <EyeOff className="h-4 w-4" />
-                            <span>Unavailable</span>
+                            <EyeOff className="h-3.5 w-3.5" />
+                            Unavailable
                         </>
                     ) : (
                         <>
-                            <ShoppingBag className="h-4 w-4" />
-                            <span>Claim Deal</span>
+                            <ShoppingBag className="h-3.5 w-3.5" />
+                            Claim
                         </>
                     )}
                 </div>
             </div>
-
-        </div>
+        </article>
     );
 }

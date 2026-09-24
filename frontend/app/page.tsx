@@ -1,60 +1,79 @@
 import { authenticatedFetch } from "@/lib/api";
 import { ProductCard } from "@/components/ProductCard";
 import { ProductsResponse } from "@/types/product";
-import { AlertCircle, Layers } from "lucide-react";
+import { AlertCircle, PackageSearch } from "lucide-react";
 
 export default async function HomePage() {
-  try {
-    // 1. Call your Express backend through your authenticated helper tool
-    const res = await authenticatedFetch("/api/products");
+    try {
+        const res = await authenticatedFetch("/api/products");
 
-    if (!res.ok) {
-      throw new Error(`Server returned error status code: ${res.status}`);
+        if (!res.ok) {
+            throw new Error(`HTTP ${res.status}`);
+        }
+
+        const json: ProductsResponse = await res.json();
+        const products = json.data?.products ?? [];
+
+        const flashActive = products.filter(
+            (p) =>
+                p.is_flash_sale &&
+                p.flash_start_at &&
+                p.flash_end_at &&
+                new Date() >= new Date(p.flash_start_at) &&
+                new Date() <= new Date(p.flash_end_at)
+        ).length;
+
+        if (products.length === 0) {
+            return (
+                <main className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+                    <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-dashed border-zinc-800 py-24 text-center">
+                        <PackageSearch className="h-10 w-10 text-zinc-700" />
+                        <div>
+                            <h2 className="text-base font-semibold text-zinc-300">No products yet</h2>
+                            <p className="mt-1 text-sm text-zinc-600">Check back soon — deals are added regularly.</p>
+                        </div>
+                    </div>
+                </main>
+            );
+        }
+
+        return (
+            <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+                {/* Page header */}
+                <div className="flex items-end justify-between gap-4">
+                    <div>
+                        <h1 className="text-2xl font-black tracking-tight text-zinc-100">
+                            Marketplace
+                        </h1>
+                        <p className="mt-1 text-sm text-zinc-500">
+                            {products.length} product{products.length !== 1 ? "s" : ""}
+                            {flashActive > 0 && (
+                                <> · <span className="text-amber-400 font-medium">{flashActive} live deal{flashActive !== 1 ? "s" : ""}</span></>
+                            )}
+                        </p>
+                    </div>
+                </div>
+
+                {/* Grid */}
+                <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {products.map((item) => (
+                        <ProductCard key={item.id} product={item} />
+                    ))}
+                </div>
+            </main>
+        );
+    } catch (error) {
+        console.error("[HomePage fetch error]:", error);
+        return (
+            <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+                <div className="flex items-start gap-3 rounded-xl border border-rose-500/15 bg-rose-500/5 p-5 text-sm text-rose-400">
+                    <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
+                    <div>
+                        <p className="font-semibold text-rose-300">Failed to load products</p>
+                        <p className="mt-0.5 text-zinc-500">Make sure the backend is running and you are signed in.</p>
+                    </div>
+                </div>
+            </main>
+        );
     }
-
-    const json: ProductsResponse = await res.json();
-    const products = json.data?.products || [];
-
-    if (products.length === 0) {
-      return (
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-zinc-800 bg-zinc-900/20 p-12 text-center">
-          <Layers className="h-8 w-8 text-zinc-600" />
-          <h2 className="mt-4 text-base font-semibold text-zinc-200">No products available</h2>
-          <p className="mt-1 text-sm text-zinc-500">Check back later for newly added flash catalog sales.</p>
-        </div>
-      );
-    }
-
-    return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-black tracking-tight text-zinc-100 sm:text-3xl">
-            Live Product Marketplace
-          </h1>
-          <p className="mt-1.5 text-sm text-zinc-400">
-            Real-time stock quantities and timed promotional pricing.
-          </p>
-        </div>
-
-        {/* 2. Map items into a beautiful scannable layout grid */}
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {products.map((item) => (
-            <ProductCard key={item.id} product={item} />
-          ))}
-        </div>
-      </div>
-    );
-
-  } catch (error) {
-    console.error("[Dashboard Fetch Execution Error]:", error);
-    return (
-      <div className="flex items-center gap-3 rounded-2xl border border-rose-500/20 bg-rose-500/5 p-4 text-sm text-rose-400">
-        <AlertCircle className="h-5 w-5 shrink-0" />
-        <div>
-          <h4 className="font-semibold text-rose-300">Failed to render products dashboard</h4>
-          <p className="mt-0.5 text-zinc-400">Please verify your local backend connection sync status or try logging back in.</p>
-        </div>
-      </div>
-    );
-  }
 }
