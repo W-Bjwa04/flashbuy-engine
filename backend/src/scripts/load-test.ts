@@ -107,7 +107,7 @@ async function runBenchmark(): Promise<void> {
 
   logger.info('🚀 Launching Autocannon — 5 000 requests over 10 seconds (100 connections)...');
 
-  const instance = autocannon({
+  const instance = (autocannon as any)({
     url: API_URL,
     connections: 100,    // 100 concurrent HTTP connection pipelines
     duration: 10,        // 10-second window

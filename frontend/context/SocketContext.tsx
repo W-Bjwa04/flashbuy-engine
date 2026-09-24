@@ -160,6 +160,28 @@ export function SocketProvider({
         }
     }, [isConnected, isConnecting, connect, disconnect]);
 
+    // Handle accessToken changes (e.g. login/logout/switch account)
+    const prevTokenRef = React.useRef(accessToken);
+    useEffect(() => {
+        if (prevTokenRef.current !== accessToken) {
+            prevTokenRef.current = accessToken;
+            const wasActive = isConnected;
+
+            if (socket) {
+                socket.disconnect();
+                setSocket(null);
+            }
+            setIsConnected(false);
+            setIsConnecting(false);
+            setNotifications({});
+            setNotificationList([]);
+
+            if (wasActive && accessToken) {
+                connect();
+            }
+        }
+    }, [accessToken, socket, isConnected, connect]);
+
     // Cleanup on unmount
     useEffect(() => {
         return () => {

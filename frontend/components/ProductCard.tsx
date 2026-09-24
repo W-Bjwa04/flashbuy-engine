@@ -61,7 +61,7 @@ export function ProductCard({ product }: { product: Product }) {
         return () => timers.forEach(clearTimeout);
     }, [product]);
 
-    const isDisabled = isOutOfStock || isFlashExpired;
+    const isDisabled = isOutOfStock || isFlashExpired || isFlashUpcoming;
 
     // Latest live status for this product's most recent order
     const latestTracking = myTrackingIds[0] ? notifications[myTrackingIds[0]] : null;
@@ -185,7 +185,7 @@ export function ProductCard({ product }: { product: Product }) {
                                 className="flex items-center gap-1.5 rounded-lg bg-slate-100 px-3.5 py-2 text-xs font-semibold text-slate-400 select-none cursor-not-allowed"
                             >
                                 <EyeOff className="h-3.5 w-3.5" />
-                                {isOutOfStock ? "Unavailable" : "Ended"}
+                                {isOutOfStock ? "Unavailable" : isFlashUpcoming ? "Coming soon" : "Ended"}
                             </div>
                         ) : (
                             <button

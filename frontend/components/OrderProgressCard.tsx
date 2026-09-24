@@ -30,14 +30,18 @@ export function OrderProgressCard({ order }: OrderProgressCardProps) {
     const isCompleted = order.status === "COMPLETED";
     const isFailed = order.status === "FAILED";
 
-    function copyToClipboard(text: string, type: "tracking" | "order") {
-        navigator.clipboard.writeText(text);
-        if (type === "tracking") {
-            setCopiedTracking(true);
-            setTimeout(() => setCopiedTracking(false), 2000);
-        } else {
-            setCopiedOrder(true);
-            setTimeout(() => setCopiedOrder(false), 2000);
+    async function copyToClipboard(text: string, type: "tracking" | "order") {
+        try {
+            await navigator.clipboard.writeText(text);
+            if (type === "tracking") {
+                setCopiedTracking(true);
+                setTimeout(() => setCopiedTracking(false), 2000);
+            } else {
+                setCopiedOrder(true);
+                setTimeout(() => setCopiedOrder(false), 2000);
+            }
+        } catch {
+            // Leave copied state unchanged on failure
         }
     }
 
@@ -264,6 +268,11 @@ export function OrderProgressCard({ order }: OrderProgressCardProps) {
                                 <Copy className="h-3 w-3" />
                             )}
                         </button>
+                    </div>
+                ) : isFailed ? (
+                    <div className="flex items-center gap-1.5 text-xs text-red-600 font-medium">
+                        <XCircle className="h-3.5 w-3.5 shrink-0" />
+                        <span>No database record created (Order aborted)</span>
                     </div>
                 ) : (
                     <div className="flex items-center gap-1.5 text-slate-400">

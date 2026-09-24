@@ -23,7 +23,7 @@ export async function Navbar() {
 
                 {/* Nav links */}
                 {session && (
-                    <nav className="hidden md:flex items-center gap-0.5">
+                    <nav className="flex items-center gap-0.5 sm:gap-1">
                         <NavLink href="/">Marketplace</NavLink>
                         <NavLink href="/flash-sales">Flash Sales</NavLink>
                         <NavLink href="/orders">Orders</NavLink>

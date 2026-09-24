@@ -9,6 +9,7 @@ export function NavBell() {
     return (
         <button
             onClick={toggleConnection}
+            aria-pressed={isConnected}
             title={
                 isConnected
                     ? "Live updates connected — click to disconnect"

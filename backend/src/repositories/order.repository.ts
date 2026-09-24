@@ -37,7 +37,7 @@ export async function getUserOrdersRepository(
                         'id', oi.id,
                         'product_id', oi.product_id,
                         'quantity', oi.quantity,
-                        'price_at_purchase', oi.price_at_purchase,
+                        'price_at_purchase', oi.price_at_purchase::text,
                         'title', p.title,
                         'description', p.description
                     )
