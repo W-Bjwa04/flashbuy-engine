@@ -10,7 +10,7 @@ The system uses an in-memory Redis speed layer, an asynchronous job queue via Bu
 
 ```text
 ┌────────────────────────────────────────────────────────┐
-│                   Next.js 15 Client                    │
+│                   Next.js 16 Client                    │
 │      (App Router · Auth.js v5 BFF · Socket.IO Hook)    │
 └───────────────┬────────────────────────▲───────────────┘
                 │                        │
@@ -226,7 +226,7 @@ CREATE INDEX idx_order_items_order_id ON order_items(order_id);
 
 | Service | Technology | Port | Description |
 | :--- | :--- | :---: | :--- |
-| **Frontend & BFF** | Next.js 15, Auth.js v5, Tailwind CSS, shadcn/ui | `3000` | Server-rendered catalog, token-forwarding proxy, socket listener |
+| **Frontend & BFF** | Next.js 16, Auth.js v5, Tailwind CSS, shadcn/ui | `3000` | Server-rendered catalog, token-forwarding proxy, socket listener |
 | **API Gateway** | Node.js, Express, TypeScript | `4000` | REST API, auth validation, rate limiter, Redis inventory pre-decrement |
 | **Worker Service** | BullMQ, Node.js, TypeScript | — | Concurrency-controlled background consumer executing PostgreSQL transactions |
 | **WebSocket Gateway** | Socket.IO, Node.js | `4001` | Dedicated socket cluster node authenticated via handshake JWTs |
